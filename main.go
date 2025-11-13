@@ -12,38 +12,42 @@ import (
 )
 
 func main() {
-	// Carrega a env
-	err := godotenv.Load()
-	if err != nil {
-		fmt.Println("Arquivo .env não encontrado, usando variáveis de ambiente")
-	}
+	_ = godotenv.Load()
 
-	// Pega a config do SMTP
 	smtpHost := os.Getenv("SMTP_HOST")
 	smtpUser := os.Getenv("SMTP_USER")
 	smtpPass := os.Getenv("SMTP_PASS")
 	smtpPort, _ := strconv.Atoi(os.Getenv("SMTP_PORT"))
+	gatewayKey := os.Getenv("GATEWAY_KEY") // chave secreta compartilhada
 
-	if smtpHost == "" || smtpUser == "" || smtpPass == "" {
-		panic("Configure SMTP_HOST, SMTP_USER, SMTP_PASS na .env ou variáveis de ambiente")
+	if smtpHost == "" || smtpUser == "" || smtpPass == "" || gatewayKey == "" {
+		panic("Configure SMTP_* e GATEWAY_KEY na .env")
 	}
 
 	r := gin.Default()
 
+	// Middleware para verificar se a requisição veio do gateway
+	r.Use(func(c *gin.Context) {
+		key := c.GetHeader("X-Gateway-Key")
+		if key == "" || key != gatewayKey {
+			c.AbortWithStatusJSON(http.StatusForbidden, gin.H{"error": "Acesso negado"})
+			return
+		}
+		c.Next()
+	})
+
 	r.POST("/send-email", func(c *gin.Context) {
 		var req struct {
-			To string `json:"to" binding:"required"`
+			To      string `json:"to" binding:"required"`
 			Subject string `json:"subject" binding:"required"`
-			Body string `json:"body" binding:"required"`
+			Body    string `json:"body" binding:"required"`
 		}
 
-		// Verifica se a requisição é válida
 		if err := c.ShouldBindJSON(&req); err != nil {
 			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 			return
 		}
 
-		// Envia o email
 		if err := sendEmail(smtpHost, smtpPort, smtpUser, smtpPass, req.To, req.Subject, req.Body); err != nil {
 			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 			return

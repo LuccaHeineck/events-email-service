@@ -4,7 +4,6 @@ Simple HTTP service to send emails via SMTP.
 
 - Language: Go
 - Web framework: gin
-- Port: 8082
 
 ## Build
 
