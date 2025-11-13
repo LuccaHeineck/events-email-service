@@ -26,6 +26,7 @@ func main() {
 
 	r := gin.Default()
 
+	fmt.Print("Verificando se a requisição veio do gateway...\n")
 	// Middleware para verificar se a requisição veio do gateway
 	r.Use(func(c *gin.Context) {
 		key := c.GetHeader("X-Gateway-Key")
