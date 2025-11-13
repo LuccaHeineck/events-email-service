@@ -18,10 +18,10 @@ func main() {
 	smtpUser := os.Getenv("SMTP_USER")
 	smtpPass := os.Getenv("SMTP_PASS")
 	smtpPort, _ := strconv.Atoi(os.Getenv("SMTP_PORT"))
-	gatewayKey := os.Getenv("GATEWAY_KEY") // chave secreta compartilhada
+	gatewayKey := os.Getenv("GATEWAY_SECRET")
 
 	if smtpHost == "" || smtpUser == "" || smtpPass == "" || gatewayKey == "" {
-		panic("Configure SMTP_* e GATEWAY_KEY na .env")
+		panic("Configure SMTP_* e GATEWAY_SECRET na .env")
 	}
 
 	r := gin.Default()
